@@ -7,8 +7,11 @@ class Person(models.Model):
         ('M', 'Medium'),
         ('L', 'Large'),
     )
-    name = models.CharField(max_length=60)
-    shirt_size = models.CharField(max_length=1, choices=SHIRT_SIZES)
+    name = models.CharField(max_length=128)
+    shirt_size = models.CharField(max_length=1, choices=SHIRT_SIZES, null=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Musician(models.Model):
@@ -42,3 +45,23 @@ class Car(models.Model):
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE)
     
 
+class Topping(models.Model):
+    pass
+
+
+class Pizza(models.Model):
+    toppings = models.ManyToManyField(Topping)
+
+
+class Group(models.Model):
+    name = models.CharField(max_length=120)
+    members = models.ManyToManyField(Person, through='Membership')
+    def __str__(self):
+        return self.name
+
+
+class Membership(models.Model):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    date_joined = models.DateField()
+    invite_reason = models.CharField(max_length=64)
