@@ -82,6 +82,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'sakila': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'sakila.db'),
     }
 }
 
@@ -123,3 +127,69 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# 개발 로컬
+import logging
+
+LOGGING_CONFIG = None
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            # exact format is not important, this is the minimum information
+            # 'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d (thread)d %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        }
+        # , 유닉스에서만 사용함.
+        # 'file': {
+        #     'level': 'DEBUG',
+        #     # 'class': 'logging.FileHandler',
+        #     # 'filename': 'logs/django-debug.log',
+        #     'class': 'logging.handlers.RotatingFileHandler',
+        #     'filename': 'logs/django-debug.log',
+        #     'maxBytes': 1024 * 1024 * 5,  # 10MB
+        #     'backupCount': 10,
+        # },
+    },
+    'loggers': {
+        '': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+        # ,
+        # 'django.db.backends': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console'],
+        #     'propagate': True,
+        # },
+    },
+})
+
+# 장고 디버그 툴바 Django Debug Toolbar 쿼리 디버그
+INTERNAL_IPS = ('localhost', '127.0.0.1')
+
+DEBUG_TOOLBAR_CONFIG = {
+    # Toolbar options
+    'RESULTS_CACHE_SIZE': 3,
+    'SHOW_COLLAPSED': True,
+    # Panel options
+    'SQL_WARNING_THRESHOLD': 100,  # milliseconds
+}
+
+LIST_PER_PAGE = 20
