@@ -15,8 +15,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.contrib.sitemaps.views import sitemap
+from django.contrib.sitemaps import GenericSitemap
+from sakila.models import Customer
+
+# sitemaps = {
+#     'customer': StaticViewSitemap,
+# }
+# info_dict = {
+#     'queryset': Customer.objects.all(),
+#     'date_field': 'last_update',
+# }
+
+# sitemaps = {
+#     'customer': GenericSitemap({
+#         'queryset': Customer.objects.all(),
+#         'date_field': 'last_update',
+#     }, priority=0.9),
+# }
 
 urlpatterns = [
+    path('sakila/', include('sakila.urls')),
     path('polls/', include('polls.urls')),
     path('admin/', admin.site.urls),
 ]

@@ -13,15 +13,20 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from datetime import datetime
+from logging import getLogger
+
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
+
+logger = getLogger(__name__)
 
 class Actor(models.Model):
     actor_id = models.IntegerField(primary_key=True)  # This field type is a guess.
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -166,7 +171,7 @@ class Category(models.Model):
     category_id = models.SmallIntegerField(primary_key=True)
     # category_id = models.AutoField()
     name = models.CharField(max_length=100)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -176,7 +181,7 @@ class Category(models.Model):
 class Country(models.Model):
     country_id = models.IntegerField(primary_key=True)
     country = models.CharField(max_length=100)
-    last_update = models.TextField(blank=True, null=True)  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -190,14 +195,14 @@ class City(models.Model):
     city_id = models.IntegerField(primary_key=True)
     city = models.CharField(max_length=100)
     country = models.ForeignKey(Country, on_delete=models.CASCADE, db_column='country_id')
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
         db_table = 'city'
-    def __str__(self):
-        return self.country
 
+    def __str__(self):
+        return self.city
 
 
 class Address(models.Model):
@@ -210,13 +215,15 @@ class Address(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE, db_column='city_id')
     postal_code = models.CharField(max_length=50, blank=True, null=True)
     phone = models.CharField(max_length=50)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
         db_table = 'address'
 
     def __str__(self):
+        # logger.debug("@@@@@__str__ : ", self.address)
+        # logger.debug("@@@@@__str__.type: ", type(self.address))
         return self.address
 
 
@@ -227,7 +234,7 @@ class Store(models.Model):
     # staff = models.ForeignKey(Staff, on_delete=models.CASCADE, db_column='manager_staff_id')
     address = models.ForeignKey(Address, on_delete=models.CASCADE, db_column='address_id')
     # address_id = models.IntegerField()
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -248,7 +255,7 @@ class Staff(models.Model):
     active = models.SmallIntegerField()
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100, blank=True, null=True)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -257,19 +264,20 @@ class Staff(models.Model):
 
 class Customer(models.Model):
     customer_id = models.IntegerField(primary_key=True)
-    store = models.ForeignKey(Store, blank=True, null=True, on_delete=models.SET_NULL, db_column='store_id')
+    store = models.ForeignKey(Store, blank=True, null=True, on_delete=models.SET_NULL, db_column='store_id', verbose_name='지점')
     # store_id = models.IntegerField()
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.CharField(max_length=200, blank=True, null=True)
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, verbose_name='주소')
     active = models.CharField(max_length=100)
-    create_date = models.DateTimeField(default=datetime.now())  # This field type is a guess.
-    last_update = models.DateTimeField(default=datetime.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
+    create_date = models.DateTimeField(default=timezone.now())  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
         db_table = 'customer'
+        verbose_name = '고객'
 
     def get_absolute_url(self):
         return reverse('sakila:customer_detail', kwargs={'pk': self.pk})
@@ -335,7 +343,7 @@ class Film(models.Model):
     replacement_cost = models.DecimalField(max_digits=10, decimal_places=5)  # max_digits and decimal_places have been guessed, as this database handles decimal fields as float
     rating = models.CharField(max_length=10, blank=True, null=True)
     special_features = models.CharField(max_length=100, blank=True, null=True)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -355,7 +363,7 @@ class Film2019090401(models.Model):
     replacement_cost = models.DecimalField(max_digits=10, decimal_places=5)  # max_digits and decimal_places have been guessed, as this database handles decimal fields as float
     rating = models.CharField(max_length=10, blank=True, null=True)
     special_features = models.CharField(max_length=100, blank=True, null=True)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -365,7 +373,7 @@ class Film2019090401(models.Model):
 class FilmActor(models.Model):
     actor_id = models.IntegerField(primary_key=True)
     film_id = models.IntegerField()
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -375,7 +383,7 @@ class FilmActor(models.Model):
 class FilmCategory(models.Model):
     film_id = models.IntegerField(primary_key=True)
     category_id = models.SmallIntegerField()
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -396,7 +404,7 @@ class Inventory(models.Model):
     inventory_id = models.IntegerField(primary_key=True)
     film_id = models.IntegerField()
     store_id = models.IntegerField()
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -406,7 +414,7 @@ class Inventory(models.Model):
 class Language(models.Model):
     language_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -416,7 +424,7 @@ class Language(models.Model):
 class Language2019090401(models.Model):
     language_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -430,7 +438,7 @@ class Payment(models.Model):
     rental_id = models.IntegerField(blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=5)  # max_digits and decimal_places have been guessed, as this database handles decimal fields as float
     payment_date = models.TextField()  # This field type is a guess.
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -465,7 +473,7 @@ class Rental(models.Model):
     customer_id = models.IntegerField()
     return_date = models.TextField(blank=True, null=True)  # This field type is a guess.
     staff_id = models.SmallIntegerField()
-    last_update = models.TextField()  # This field type is a guess.
+    last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False

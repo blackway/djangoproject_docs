@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
-from .models import Customer, Address, City
+from .models import Customer, Address, City, Country
 
 
 class MultiDBModelAdmin(admin.ModelAdmin):
@@ -48,6 +48,8 @@ class CustomerAdmin(MultiDBModelAdmin):
     # fields = ('store', 'first_name', 'last_name','email',)
     # fields = '__all__'
     raw_id_fields = ("address",)
+    readonly_fields = ('customer_id',)
+    list_editable = ('address',)
     # list_select_related = ('customer', 'address')
     # radio_fields = {"address": admin.VERTICAL}
     # filter_vertical = ('address',)
@@ -70,18 +72,30 @@ class CustomerAdmin(MultiDBModelAdmin):
     # # short_description functions like a model field's verbose_name
     # address_report.short_description = "Address"
 
+
 class AddressAdmin(MultiDBModelAdmin):
     list_display = ['address', 'address2', 'district', 'city_id', 'postal_code', 'phone', 'last_update'] # [field.name for field in Address._meta.get_fields()]
     list_per_page = 20
+    readonly_fields = ('address_id',)
+    # exclude = ('address', 'address2', 'district', 'city_id', 'postal_code', 'phone', 'last_update', )
 
 
 class CityAdmin(MultiDBModelAdmin):
     list_display = ['city_id', 'city', 'country', 'last_update'] # [field.name for field in Address._meta.get_fields()]
     list_per_page = 20
 
+
+class CountryAdmin(MultiDBModelAdmin):
+    list_display = ['country', 'last_update'] # [field.name for field in Address._meta.get_fields()]
+    list_per_page = 20
+    exclude = ('country_id',)
+
 #
 #
 # admin.site.register(Customer, CustomerAdmin, MultiDBModelAdmin)
+
+
+admin.site.register(Country, CountryAdmin)
 
 
 admin.site.register(Address, AddressAdmin)
