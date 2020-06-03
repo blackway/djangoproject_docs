@@ -12,6 +12,7 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+from datetime import datetime
 from django.db import models
 from django.urls import reverse
 
@@ -25,23 +26,6 @@ class Actor(models.Model):
     class Meta:
         managed = False
         db_table = 'actor'
-
-
-class Address(models.Model):
-    address_id = models.IntegerField(primary_key=True)
-    # id = models.IntegerField(primary_key=True, db_column='address_id')
-    # address_id = models.AutoField()
-    address = models.CharField(max_length=500)
-    address2 = models.CharField(max_length=500, blank=True, null=True)
-    district = models.CharField(max_length=100)
-    city_id = models.IntegerField()
-    postal_code = models.CharField(max_length=50, blank=True, null=True)
-    phone = models.CharField(max_length=50)
-    last_update = models.TextField()  # This field type is a guess.
-
-    class Meta:
-        managed = False
-        db_table = 'address'
 
 
 class AggregationAuthor(models.Model):
@@ -189,17 +173,6 @@ class Category(models.Model):
         db_table = 'category'
 
 
-class City(models.Model):
-    city_id = models.IntegerField(primary_key=True)
-    city = models.CharField(max_length=100)
-    country_id = models.SmallIntegerField()
-    last_update = models.TextField()  # This field type is a guess.
-
-    class Meta:
-        managed = False
-        db_table = 'city'
-
-
 class Country(models.Model):
     country_id = models.IntegerField(primary_key=True)
     country = models.CharField(max_length=100)
@@ -209,10 +182,49 @@ class Country(models.Model):
         managed = False
         db_table = 'country'
 
+    def __str__(self):
+        return self.country
+
+
+class City(models.Model):
+    city_id = models.IntegerField(primary_key=True)
+    city = models.CharField(max_length=100)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, db_column='country_id')
+    last_update = models.TextField()  # This field type is a guess.
+
+    class Meta:
+        managed = False
+        db_table = 'city'
+    def __str__(self):
+        return self.country
+
+
+
+class Address(models.Model):
+    address_id = models.IntegerField(primary_key=True)
+    # id = models.IntegerField(primary_key=True, db_column='address_id')
+    # address_id = models.AutoField()
+    address = models.CharField(max_length=500)
+    address2 = models.CharField(max_length=500, blank=True, null=True)
+    district = models.CharField(max_length=100)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, db_column='city_id')
+    postal_code = models.CharField(max_length=50, blank=True, null=True)
+    phone = models.CharField(max_length=50)
+    last_update = models.TextField()  # This field type is a guess.
+
+    class Meta:
+        managed = False
+        db_table = 'address'
+
+    def __str__(self):
+        return self.address
+
 
 class Store(models.Model):
     store_id = models.IntegerField(primary_key=True)
     manager_staff_id = models.SmallIntegerField()
+    # staff = models.ManyToManyField(Staff, through='Staff', db_column='manager_staff_id')
+    # staff = models.ForeignKey(Staff, on_delete=models.CASCADE, db_column='manager_staff_id')
     address = models.ForeignKey(Address, on_delete=models.CASCADE, db_column='address_id')
     # address_id = models.IntegerField()
     last_update = models.TextField()  # This field type is a guess.
@@ -220,6 +232,27 @@ class Store(models.Model):
     class Meta:
         managed = False
         db_table = 'store'
+
+    def __str__(self):
+        return self.address.address
+
+
+class Staff(models.Model):
+    staff_id = models.IntegerField(primary_key=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, db_column='address_id')
+    picture = models.BinaryField(blank=True, null=True)
+    email = models.CharField(max_length=200, blank=True, null=True)
+    store_id = models.ForeignKey(Store, on_delete=models.CASCADE, db_column='store_id')
+    active = models.SmallIntegerField()
+    username = models.CharField(max_length=100)
+    password = models.CharField(max_length=100, blank=True, null=True)
+    last_update = models.TextField()  # This field type is a guess.
+
+    class Meta:
+        managed = False
+        db_table = 'staff'
 
 
 class Customer(models.Model):
@@ -229,10 +262,10 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.CharField(max_length=200, blank=True, null=True)
-    address_id = models.ForeignKey(Address, on_delete=models.SET_NULL)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     active = models.CharField(max_length=100)
-    create_date = models.DateTimeField('%m/%d/%Y %H:%M:%S')  # This field type is a guess.
-    last_update = models.DateTimeField('%m/%d/%Y %H:%M:%S')  # This field type is a guess.
+    create_date = models.DateTimeField(default=datetime.now())  # This field type is a guess.
+    last_update = models.DateTimeField(default=datetime.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
 
     class Meta:
         managed = False
@@ -240,6 +273,9 @@ class Customer(models.Model):
 
     def get_absolute_url(self):
         return reverse('sakila:customer_detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return self.first_name
 
 
 class DjangoAdminLog(models.Model):
@@ -437,19 +473,3 @@ class Rental(models.Model):
         unique_together = (('rental_date', 'inventory_id', 'customer_id'),)
 
 
-class Staff(models.Model):
-    staff_id = models.IntegerField(primary_key=True)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    address_id = models.IntegerField()
-    picture = models.BinaryField(blank=True, null=True)
-    email = models.CharField(max_length=200, blank=True, null=True)
-    store_id = models.IntegerField()
-    active = models.SmallIntegerField()
-    username = models.CharField(max_length=100)
-    password = models.CharField(max_length=100, blank=True, null=True)
-    last_update = models.TextField()  # This field type is a guess.
-
-    class Meta:
-        managed = False
-        db_table = 'staff'

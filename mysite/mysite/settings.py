@@ -78,6 +78,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+
+DATABASE_ROUTERS = ['mysite.models.DemoRouter']
+DATABASE_APPS_MAPPING = {'mysite': 'default',
+                        'sakila':'sakila'}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -137,7 +142,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # 개발 로컬
-import logging
+import logging.config
 
 LOGGING_CONFIG = None
 logging.config.dictConfig({
@@ -192,4 +197,4 @@ DEBUG_TOOLBAR_CONFIG = {
     'SQL_WARNING_THRESHOLD': 100,  # milliseconds
 }
 
-LIST_PER_PAGE = 20
+
