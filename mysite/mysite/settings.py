@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'django.contrib.sitemaps',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -174,16 +175,16 @@ logging.config.dictConfig({
         # },
     },
     'loggers': {
-        '': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        }
-        # ,
-        # 'django.db.backends': {
+        # '': {
         #     'level': 'DEBUG',
         #     'handlers': ['console'],
-        #     'propagate': True,
-        # },
+        # }
+        # ,
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': True,
+        },
     },
 })
 

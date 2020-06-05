@@ -1,8 +1,17 @@
+from logging import getLogger
+
 from django.contrib import admin
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
+from django.db.models.expressions import Window
+from django.db.models.functions import RowNumber
+from django.db.models import F
+
 from .models import Customer, Address, City, Country
+
+
+logger = getLogger(__name__)
 
 
 class MultiDBModelAdmin(admin.ModelAdmin):
@@ -36,9 +45,13 @@ class MultiDBModelAdmin(admin.ModelAdmin):
 # Register your models here.
 # @admin.register(Customer, MultiDBModelAdmin)
 class CustomerAdmin(MultiDBModelAdmin):
-    ordering = ['-last_update']
-    search_fields = ('first_name', 'last_name', 'address__address2')
-    list_display = ('first_name', 'last_name', 'address', 'last_update')
+    # line_numbering = 0
+    # ordering = ['-last_update']
+    list_display = ('row_number', 'first_name', 'last_name', 'address', 'last_update')
+    list_select_related = (
+        'address',
+    )
+    search_fields = ('first_name', 'last_name', 'address__address')
     date_hierarchy = 'last_update'
     list_display_links = ('first_name', 'last_name')
     list_filter = ('last_update', 'store')
@@ -48,10 +61,10 @@ class CustomerAdmin(MultiDBModelAdmin):
     # fields = ('store', 'first_name', 'last_name','email',)
     # fields = '__all__'
     raw_id_fields = ("address",)
-    readonly_fields = ('customer_id',)
+    readonly_fields = ('customer_id', )
     list_editable = ('address',)
     # list_select_related = ('customer', 'address')
-    # radio_fields = {"address": admin.VERTICAL}
+    radio_fields = {"active": admin.VERTICAL}
     # filter_vertical = ('address',)
     # filter_horizontal = ('address',)
     # raw_id_fields = ('address',)
@@ -72,16 +85,43 @@ class CustomerAdmin(MultiDBModelAdmin):
     # # short_description functions like a model field's verbose_name
     # address_report.short_description = "Address"
 
+    def row_number(self, obj):
+        logger.debug("@@@@ row_number : %s" % obj.row_number)
+        return obj.row_number
+    row_number.short_description = '#'
+
+
+
+    # admin_select_related = (
+    #     'address',
+    # )
+
+    # def get_queryset(self, request):
+    #     return Customer.objects.annotate(row_number=Window(expression=RowNumber(), partition_by=[F('customer_id')], order_by=[F('last_update')])).order_by('row_number', 'customer_id')
+    #
+    # def line_number(self, obj):
+    #     self.line_numbering += 1
+    #     return self.line_numbering
+
+    # def line_number(self, obj):
+    #     self.line_numbering += 1
+    #     return self.line_numbering
+    #
+    # line_number.short_description = '#'
+
 
 class AddressAdmin(MultiDBModelAdmin):
-    list_display = ['address', 'address2', 'district', 'city_id', 'postal_code', 'phone', 'last_update'] # [field.name for field in Address._meta.get_fields()]
+    list_display = ['address', 'address2', 'district', 'city', 'postal_code', 'phone', 'last_update'] # [field.name for field in Address._meta.get_fields()]
     list_per_page = 20
     readonly_fields = ('address_id',)
+    search_fields = ('address', 'city__city',)
     # exclude = ('address', 'address2', 'district', 'city_id', 'postal_code', 'phone', 'last_update', )
 
 
 class CityAdmin(MultiDBModelAdmin):
-    list_display = ['city_id', 'city', 'country', 'last_update'] # [field.name for field in Address._meta.get_fields()]
+    list_display = ['city', 'country', 'last_update'] # [field.name for field in Address._meta.get_fields()]
+    readonly_fields = ('city_id',)
+    search_fields = ('city', 'country__country',)
     list_per_page = 20
 
 

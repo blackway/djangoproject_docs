@@ -19,8 +19,12 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
+from django.db.models.expressions import Window
+from django.db.models.functions import RowNumber
+from django.db.models import F
 
 logger = getLogger(__name__)
+
 
 class Actor(models.Model):
     actor_id = models.IntegerField(primary_key=True)  # This field type is a guess.
@@ -262,6 +266,24 @@ class Staff(models.Model):
         db_table = 'staff'
 
 
+class CustomerManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            row_number=Window(expression=RowNumber(),
+                              order_by=[F('last_update')])).order_by('row_number', 'customer_id')
+        # return super().get_queryset().annotate(
+        #     row_number=Window(expression=RowNumber(),
+        #                       order_by=[F('last_update')])).order_by('row_number', 'customer_id')
+        # return super().get_queryset().annotate(
+        #     row_number=Window(expression=RowNumber(), partition_by=[F('customer_id')],
+        #                       order_by=[F('last_update')])).order_by('row_number', 'customer_id')
+
+
+ACTIVE_TYPE_CHOICES = (
+    ('0', 'done'),
+    ('1', 'active'),
+)
+
 class Customer(models.Model):
     customer_id = models.IntegerField(primary_key=True)
     store = models.ForeignKey(Store, blank=True, null=True, on_delete=models.SET_NULL, db_column='store_id', verbose_name='지점')
@@ -270,9 +292,11 @@ class Customer(models.Model):
     last_name = models.CharField(max_length=100)
     email = models.CharField(max_length=200, blank=True, null=True)
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, verbose_name='주소')
-    active = models.CharField(max_length=100)
+    active = models.CharField(max_length=1, choices=ACTIVE_TYPE_CHOICES, default='1')
     create_date = models.DateTimeField(default=timezone.now())  # This field type is a guess.
     last_update = models.DateTimeField(default=timezone.now())  # This field type is a guess. '%m/%d/%Y %H:%M:%S'
+    # row_number = models.IntegerField()  # 쿼리에서 만든 컬럼.
+    objects = CustomerManager()
 
     class Meta:
         managed = False
